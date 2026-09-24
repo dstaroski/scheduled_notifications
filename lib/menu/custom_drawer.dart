@@ -32,7 +32,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   'Scheduled Notifications',
                   style: TextStyle(fontSize: 22.0),
                 ),
-                accountEmail: const Text('Version 1.0.0'),
+                accountEmail: const Text('Version 1.0.1'),
               ),
               Expanded(
                 child: ListView(
@@ -140,30 +140,31 @@ class _CustomDrawerState extends State<CustomDrawer> {
   }) {
     final isSelected = widget.selectedIndex == index;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 4.0),
-      decoration: BoxDecoration(
+    return Padding(
+      padding: EdgeInsets.all(0),
+      child: Material(
         color: isSelected
           ? const Color(0xFF4F46E5).withValues(alpha: 0.12)
           : Colors.transparent,
         borderRadius: BorderRadius.circular(16.0),
-      ),
-      child: ListTile(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.0),
-        ),
-        leading: Icon(
-          icon,
-          color: isSelected ? const Color(0xFF4F46E5) : Colors.grey[700],
-        ),
-        title: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? const Color(0xFF4F46E5) : Colors.grey[800],
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
           ),
+          leading: Icon(
+            icon,
+            color: isSelected ? const Color(0xFF4F46E5) : Colors.grey[700],
+          ),
+          title: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? const Color(0xFF4F46E5) : Colors.grey[800],
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+          onTap: onTap,
         ),
-        onTap: onTap,
       ),
     );
   }

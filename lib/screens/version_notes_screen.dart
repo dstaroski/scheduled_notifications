@@ -31,6 +31,7 @@ class _VersionNotesState extends State<VersionNotes> {
         padding: const EdgeInsets.all(16.0),
         children: const [
           Card(child: Text('Version 1.0.0 - Initial version of the app.')),
+          Card(child: Text('Version 1.0.1 - Fixed a rendering warning in the drawer menu.')),
         ],
       ),
     );
