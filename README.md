@@ -75,3 +75,10 @@ logic errors or a lack of best practices in my code,
 even though I tried to write it following standard conventions as 
 much as possible. Feel free to use and modify it for your own projects. 
 I hope it proves useful to you. Thank you!
+
+## Credits
+
+* Coding animation by Nashwan Abdullah from: https://lottiefiles.com/free-animation/coding-o5mKNbAYBd
+* Check hover pinch animation by Lordicon.com
+* Alarm hover pinch animation by Lordicon.com
+* Squirrel hover pinch animation by Lordicon.com

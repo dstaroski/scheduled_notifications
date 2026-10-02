@@ -23,35 +23,36 @@ class DBHelper {
   // Create the table on SQLite.
   void _createDatabase(Database db, int version) async {
     await db.execute('''
-      CREATE TABLE my_table (
+      CREATE TABLE time (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        time TEXT
+        time TEXT,
+        description TEXT
       )
     ''');
   }
 
   // Insert data on SQLite.
-  Future<int> insertDb(Map<String, dynamic> row) async {
+  Future<int> insertTime(Map<String, dynamic> row) async {
     Database db = await dbHero.dataBase;
-    return await db.insert('my_table', row);
+    return await db.insert('time', row);
   }
 
   // Get data on SQLite.
-  Future<List<Map<String, dynamic>>> readDb() async {
+  Future<List<Map<String, dynamic>>> getAllTimes() async {
     Database db = await dbHero.dataBase;
-    return await db.query('my_table');
+    return await db.query('time');
   }
 
   // Update data on table.
-  Future<int> updateDb(Map<String, dynamic> row) async {
+  Future<int> updateTime(Map<String, dynamic> row) async {
     Database db = await dbHero.dataBase;
     int id = row['id'];
-    return await db.update('my_table', row, where: 'id = ?', whereArgs: [id]);
+    return await db.update('time', row, where: 'id = ?', whereArgs: [id]);
   }
 
   // Delete data on table.
-  Future<int> deleteDb(int id) async {
+  Future<int> deleteTime(int id) async {
     Database db = await dbHero.dataBase;
-    return await db.delete('my_table', where: 'id = ?', whereArgs: [id]);
+    return await db.delete('time', where: 'id = ?', whereArgs: [id]);
   }
 }

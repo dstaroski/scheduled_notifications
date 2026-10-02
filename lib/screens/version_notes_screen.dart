@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:scheduled_notifications/menu/custom_drawer.dart';
 
 class VersionNotes extends StatefulWidget {
@@ -29,9 +30,15 @@ class _VersionNotesState extends State<VersionNotes> {
       drawer: const CustomDrawer(selectedIndex: 1),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
-        children: const [
-          Card(child: Text('Version 1.0.0 - Initial version of the app.')),
-          Card(child: Text('Version 1.0.1 - Fixed a rendering warning in the drawer menu.')),
+        children: [
+          Padding(
+            padding: EdgeInsets.only(left: 16.0, right: 16.0, bottom: 16.0),
+            child: Lottie.asset('assets/animations/coding.json'),
+          ),
+          const Card(child: Text('Version 1.0.2 - Added some animations, improved project structure,'
+            ' and added a description field for notifications.')),
+          const Card(child: Text('Version 1.0.1 - Fixed a rendering warning in the drawer menu.')),
+          const Card(child: Text('Version 1.0.0 - Initial version of the app.')),
         ],
       ),
     );

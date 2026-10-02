@@ -5,21 +5,25 @@ class Repository {
   final _dbHelper = DBHelper.dbHero;
 
   Future<List<NotificationTime>> getAllTimes() async {
-    final List<Map<String, dynamic>> maps = await _dbHelper.readDb();
+    final List<Map<String, dynamic>> maps = await _dbHelper.getAllTimes();
     return List.generate(maps.length, (i) {
-      return NotificationTime(id: maps[i]['id'], time: maps[i]['time']);
+      return NotificationTime(
+        id: maps[i]['id'],
+        time: maps[i]['time'],
+        description: maps[i]['description'],
+      );
     });
   }
 
-  Future<int> insert(NotificationTime time) async {
-    return await _dbHelper.insertDb(time.toMap());
+  Future<int> insertTime(NotificationTime time) async {
+    return await _dbHelper.insertTime(time.toMap());
   }
 
-  Future<int> update(NotificationTime time) async {
-    return await _dbHelper.updateDb(time.toMap());
+  Future<int> updateTime(NotificationTime time) async {
+    return await _dbHelper.updateTime(time.toMap());
   }
 
-  Future<int> delete(int id) async {
-    return await _dbHelper.deleteDb(id);
+  Future<int> deleteTime(int id) async {
+    return await _dbHelper.deleteTime(id);
   }
 }

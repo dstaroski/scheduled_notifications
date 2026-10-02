@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:scheduled_notifications/database/repository.dart';
+import 'package:lottie/lottie.dart';
+import 'package:scheduled_notifications/controllers/home_screen_controller.dart';
 import 'package:scheduled_notifications/model/notification_time.dart';
 import 'package:scheduled_notifications/service/notification_service.dart';
 import 'package:scheduled_notifications/menu/custom_drawer.dart';
@@ -13,50 +14,81 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final Repository _repository = Repository();
+  final HomeScreenController _homeScreenController = HomeScreenController();
+  final TextEditingController _descriptionController = TextEditingController();
 
   List<NotificationTime> _times = [];
+  bool canEdit = false;
+  bool hasTimes = false;
+  int updateId = 0;
 
   @override
   void initState() {
     super.initState();
-    _getTimes();
+    _getAllTimes();
   }
 
   // Retrieves all schedules from the database.
-  void _getTimes() async {
-    final times = await _repository.getAllTimes();
+  void _getAllTimes() async {
+    final times = await _homeScreenController.getAllTimes();
+    hasTimes = times.isNotEmpty;
+
     setState(() {
       _times = times;
     });
   }
 
   // Add a schedule on database.
-  void _addTime(String selectedTime) async {
-    if (selectedTime.isNotEmpty) {
-      final time = NotificationTime(time: selectedTime);
-      final int generatedId = await _repository.insert(time);
-      await _timeSchedule(generatedId, time.time);
-      _getTimes();
+  void _insertTime(String selectedTime) async {
+    if (_descriptionController.text.isNotEmpty) {
+      if(selectedTime.isNotEmpty) {
+        final time = NotificationTime(
+          time: selectedTime,
+          description: _descriptionController.text,
+        );
+        final int generatedId = await _homeScreenController.insertTime(time);
+        await _timeSchedule(generatedId, time.time, time.description);
+        _descriptionController.clear();
+        _getAllTimes();
+        _showSuccessAnimation();
+      } else {
+        _showSnackBar('The selected time cannot be empty.');
+      }
+    } else {
+      _showSnackBar('The description field cannot be empty.');
     }
   }
 
   // Update a schedule on database.
   void _updateTime(int? id, String selectedTime) async {
-    final updatedNotificationTime = NotificationTime(
-      id: id,
-      time: selectedTime,
-    );
-    await _repository.update(updatedNotificationTime);
-    await _timeSchedule(id ?? 0, selectedTime);
-    _getTimes();
+    if(id != 0 && selectedTime.isNotEmpty
+      && _descriptionController.text.isNotEmpty) {
+      final updatedNotificationTime = NotificationTime(
+        id: id,
+        time: selectedTime,
+        description: _descriptionController.text,
+      );
+      await _homeScreenController.updateTime(updatedNotificationTime);
+      await _timeSchedule(id ?? 0, selectedTime, updatedNotificationTime.description);
+      _getAllTimes();
+      _cancelEdit();
+      _showSuccessAnimation();
+    } else {
+      _showSnackBar('An error occurred during the update.');
+    }
   }
 
   // Delete a schedule on database.
   void _deleteTime(int id) async {
-    await NotificationService().cancel(id);
-    await _repository.delete(id);
-    _getTimes();
+    if(id != 0) {
+      await NotificationService().cancel(id);
+      await _homeScreenController.deleteTime(id);
+      _getAllTimes();
+      _cancelEdit();
+      _showSuccessAnimation();
+    } else {
+      _showSnackBar('An error occurred during the delete.');
+    }
   }
 
   // Open a native timepicker on android and capture the time.
@@ -70,7 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final formatedTime = await _formatTime(selectedTime);
 
       if (add) {
-        _addTime(formatedTime);
+        _insertTime(formatedTime);
       } else {
         _updateTime(id, formatedTime);
       }
@@ -86,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // Schedule a time on flutter local notification plugin.
-  Future<void> _timeSchedule(int id, String time) async {
+  Future<void> _timeSchedule(int id, String time, String description) async {
     if (time.isNotEmpty && id != 0) {
       final split = time.split(':');
       final hour = int.parse(split[0]);
@@ -94,12 +126,54 @@ class _HomeScreenState extends State<HomeScreen> {
 
       await NotificationService().scheduleDailyNotification(
         id: id,
-        title: 'Notification title',
-        body: 'Here is the text of your notification!',
+        title: 'Hello! notification for you \u{1F600}!',
+        body: description,
         hour: hour,
         minute: minute,
       );
     }
+  }
+
+  void _showSnackBar(String text) {
+    if(!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(text),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+    );
+  }
+
+  void _showSuccessAnimation() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.transparent,
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          child: Lottie.asset(
+            'assets/animations/check_hover_pinch.json',
+            repeat: false,
+            width: 50,
+            height: 50,
+            onLoaded: (composition) {
+              Future.delayed(composition.duration, () {
+                if (dialogContext.mounted) {
+                  Navigator.of(dialogContext).pop();
+                }
+              });
+            }
+          ),
+        );
+      },
+    );
   }
 
   // Check scheduled notifications - useful for tests.
@@ -144,8 +218,26 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _canEdit(NotificationTime time) {
+    setState(() {
+      canEdit = true;
+      _descriptionController.text = time.description;
+      updateId = time.id ?? 0;
+    });
+  }
+
+  void _cancelEdit() {
+    setState(() {
+      canEdit = false;
+      _descriptionController.clear();
+      updateId = 0;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Colors.blueGrey;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -168,29 +260,49 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Align(
-              alignment: Alignment.center,
-              child: Text(
-                'Add a hour:',
-                style: TextStyle(fontSize: 18.0),
-                textAlign: TextAlign.center,
+            padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0),
+            child: TextField(
+              decoration: InputDecoration(
+                labelText: 'Description',
               ),
-            ),
+              controller: _descriptionController,
+              maxLength: 35,
+            )
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: IconButton(
-              icon: Icon(
-                Icons.add_circle,
-                size: 50.0,
-                color: Color(0xFF4368EC),
-              ),
-              onPressed: () => _openTimeSelector(0, true),
+          !canEdit ? IconButton(
+            onPressed: () => _openTimeSelector(0, true),
+            icon: Icon(Icons.add),
+            color: Colors.white,
+            style: IconButton.styleFrom(
+              backgroundColor: theme,
             ),
+          )
+          :
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                onPressed: () => _cancelEdit(),
+                icon: Icon(Icons.cancel),
+                color: Colors.white,
+                style: IconButton.styleFrom(
+                  backgroundColor: theme,
+                ),
+              ),
+              SizedBox(width: 16.0),
+              IconButton(
+                onPressed: () => _openTimeSelector(updateId, false),
+                icon: Icon(Icons.save),
+                color: Colors.white,
+                style: IconButton.styleFrom(
+                  backgroundColor: theme,
+                ),
+              ),
+            ],
           ),
           Expanded(
-            child: ListView.builder(
+            child: hasTimes ? ListView.builder(
+              padding: const EdgeInsets.all(16.0),
               itemCount: _times.length,
               itemBuilder: (context, index) {
                 final time = _times[index];
@@ -202,15 +314,19 @@ class _HomeScreenState extends State<HomeScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Icon(Icons.notifications),
-                          Text(
-                            'Set Time: ${time.time}',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 16.0),
+                          Column(
+                            children: [
+                              Text('${time.description}'),
+                              Text(
+                                '${time.time}',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 16.0),
+                              ),
+                            ],
                           ),
                           IconButton(
                             icon: Icon(Icons.edit),
-                            onPressed: () =>
-                                _openTimeSelector(time.id ?? 0, false),
+                            onPressed: () => _canEdit(time),
                           ),
                         ],
                       ),
@@ -242,6 +358,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 );
               },
+            )
+            : Lottie.asset(
+              'assets/animations/squirrel_hover_pinch.json',
+              height: 200,
+              width: 200,
             ),
           ),
         ],

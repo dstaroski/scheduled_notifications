@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:scheduled_notifications/screens/home_screen.dart';
 import 'package:scheduled_notifications/screens/version_notes_screen.dart';
 import 'package:flutter/services.dart';
@@ -25,14 +26,22 @@ class _CustomDrawerState extends State<CustomDrawer> {
           child: Column(
             children: [
               UserAccountsDrawerHeader(
-                currentAccountPicture: const CircleAvatar(
-                  child: Icon(Icons.alarm, size: 40.0),
+                currentAccountPicture: Lottie.asset(
+                  'assets/animations/alarm_hover_pinch.json',
+                  repeat: false,
                 ),
                 accountName: const Text(
                   'Scheduled Notifications',
                   style: TextStyle(fontSize: 22.0),
                 ),
-                accountEmail: const Text('Version 1.0.1'),
+                accountEmail: const Text('Version 1.0.2'),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF4368EC), Color(0xFF13299A)],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                ),
               ),
               Expanded(
                 child: ListView(
